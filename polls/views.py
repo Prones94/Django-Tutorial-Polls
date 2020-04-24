@@ -30,7 +30,7 @@ class DetailView(generic.DetailView):
         if form.is_valid:
             choice = form.save(commit=False)
             choice.question = Question.objects.get(pk=pk)
-            chocie.save()
+            choice.save()
             return HttpResponseRedirect(reverse('polls:detail', args=[pk]))
         context = {
             'choice_form': form,
