@@ -1,0 +1,18 @@
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'polls/style.css' %" />
+{% if request.user.is_authenticated %}
+    <p>Hello, {{ request.user.username }}!</p>
+    <a href="/polls/create">New Poll</a>
+{% endif %}
+<p align="right">
+  <a href="/accounts/login">Login</a>
+  <a href="/accounts/logout">Logout</a>
+  <a href="/registration/signup">Sign Up</a>
+</p>
+
+{% block content %}
+<p>
+  This is a placeholder block.
+</p>
+{% endblock %}
