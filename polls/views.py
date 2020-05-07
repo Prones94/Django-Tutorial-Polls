@@ -1,10 +1,12 @@
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, HttpResponseRedirect
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.views import generic
 from django.utils import timezone
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import Choice, Question
+from .forms import QuestionCreateForm, ChoiceCreateForm
 # Create your views here.
 
 class IndexView(generic.ListView):
@@ -16,7 +18,25 @@ class IndexView(generic.ListView):
 
 class DetailView(generic.DetailView):
     model = Question
-    template_name = 'polls/detail.html'
+    template_name = 'polls/detail.html
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['choice_form'] = ChoiceCreateForm()
+        return context
+
+    def post(self, request, pk):
+        form = ChoiceCreateForm(request.POST)
+        if form.is_valid:
+            choice = form.save(commit=False)
+            choice.question = Question.objects.get(pk=pk)
+            choice.save()
+            return HttpResponseRedirect(reverse('polls:detail', args=[pk]))
+        context = {
+            'choice_form': form,
+            'question': Question.objects.get(pk=pk)
+        }
+        return render(request, 'polls/detail.html', context)
 
     def get_queryset(self):
         return Question.objects.filter(pub_date__lte=timezone.now())
@@ -39,3 +59,24 @@ def vote(request, question_id):
         selected_choice.votes += 1
         selected_choice.save()
         return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+
+class QuestionCreateView(LoginRequiredMixin, generic.edit.CreateView):
+    login_url = reverse_lazy('login')
+    def get(self, request, *args, **kwargs):
+        context = {
+            'form':
+            QuestionCreateForm()
+        }
+        return render(request, 'polls/create.html', context)
+
+    def post(self, request, *args, **kwargs):
+        form = QuestionCreateForm(request.POST)
+        if form.is_valid:
+            question = form.save(commit=False)
+            question.author = request.user
+            question.save()
+            question.save()
+            return HttpResponseRedirect(
+                reverse('polls:detail', args=[question.id])
+            )
+        return render(request, 'polls/create.html', { 'form' : form })
